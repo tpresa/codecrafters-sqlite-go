@@ -34,11 +34,27 @@ func main() {
 			fmt.Println("Failed to read integer:", err)
 			return
 		}
+
+		// Read the page header to get number of cells
+		// The page header starts at byte 100 (after the file header)
+		// The number of cells is at offset 3-4 within the page header
+		pageHeader := make([]byte, 8)
+		_, err = databaseFile.ReadAt(pageHeader, 100)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var numCells uint16
+		if err := binary.Read(bytes.NewReader(pageHeader[3:5]), binary.BigEndian, &numCells); err != nil {
+			fmt.Println("Failed to read number of cells:", err)
+			return
+		}
+
 		// You can use print statements as follows for debugging, they'll be visible when running tests.
 		fmt.Fprintln(os.Stderr, "Logs from your program will appear here!")
 
-		// TODO: Uncomment the code below to pass the first stage
-		fmt.Printf("database page size: %v", pageSize)
+		fmt.Printf("database page size: %v\n", pageSize)
+		fmt.Printf("number of tables: %v", numCells)
 	default:
 		fmt.Println("Unknown command", command)
 		os.Exit(1)
